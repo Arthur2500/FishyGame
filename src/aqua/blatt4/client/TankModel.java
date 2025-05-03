@@ -27,7 +27,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
     private enum RecordState { IDLE, LEFT, RIGHT, BOTH }
 
     /* ---------- Aquarium‑Daten ---------- */
-    private final Set<FishModel> fishies = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<FishModel> fishies;
     private final ClientCommunicator.ClientForwarder forwarder;
 
     private volatile String id;
@@ -58,6 +58,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
     /* ---------- Konstruktor ---------- */
     public TankModel(ClientCommunicator communicator) {
+        this.fishies = Collections.newSetFromMap(new ConcurrentHashMap<FishModel, Boolean>());
         this.forwarder = communicator.newClientForwarder(this);
     }
 

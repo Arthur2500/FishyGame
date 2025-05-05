@@ -1,6 +1,4 @@
-package aqua.blatt4.client;
-
-import java.net.InetSocketAddress;
+package aqua.blatt5.client;
 
 import aqua.blatt1.common.Direction;
 import aqua.blatt1.common.FishModel;
@@ -10,12 +8,14 @@ import aqua.blatt1.common.msgtypes.HandoffRequest;
 import aqua.blatt1.common.msgtypes.RegisterRequest;
 import aqua.blatt1.common.msgtypes.RegisterResponse;
 import aqua.blatt4.common.msgtypes.SnapshotMarker;
-import aqua.blatt4.common.msgtypes.SnapshotTokenMessage;
-import aqua.blatt4.common.msgtypes.NeighborUpdate;
-import aqua.blatt4.common.msgtypes.TokenMessage;
+import aqua.blatt5.common.msgtypes.NeighborUpdate;
+import aqua.blatt5.common.msgtypes.SnapshotTokenMessage;
+import aqua.blatt5.common.msgtypes.TokenMessage;
 import messaging.Endpoint;
 import messaging.Message;
-import messaging.*;
+import aqua.blatt5.common.msgtypes.LocationRequest;
+
+import java.net.InetSocketAddress;
 
 /**
  * Handles sending and receiving messages between client and broker or peers.
@@ -34,6 +34,10 @@ public class ClientCommunicator {
         private ClientForwarder(TankModel tankModel) {
             this.broker = new InetSocketAddress(Properties.HOST, Properties.PORT);
             this.tankModel = tankModel;
+        }
+
+        public void sendLocationRequest(InetSocketAddress neighbor, String fishId) {
+            endpoint.send(neighbor, new LocationRequest(fishId));
         }
 
         public void register() {
@@ -117,6 +121,10 @@ public class ClientCommunicator {
                 }
                 else if (msg.getPayload() instanceof SnapshotTokenMessage) {
                     tankModel.onSnapshotToken((SnapshotTokenMessage) msg.getPayload());
+                }
+                else if (msg.getPayload() instanceof LocationRequest) {
+                    String fishId = ((LocationRequest) msg.getPayload()).getFishId();
+                    tankModel.locateFishGlobally(fishId);
                 }
             }
             System.out.println("Receiver stopped.");

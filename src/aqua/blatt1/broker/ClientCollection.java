@@ -53,6 +53,14 @@ public class ClientCollection<T> {
 		return clients.get(index).client;
 	}
 
+	public T get(String id) {
+		int index = indexOf(id);
+		if (index != -1) {
+			return getClient(index);
+		}
+		return null;
+	}
+
 	public int size() {
 		return clients.size();
 	}

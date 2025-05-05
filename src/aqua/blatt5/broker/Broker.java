@@ -1,21 +1,21 @@
-package aqua.blatt3.broker;
+package aqua.blatt5.broker;
 
 import aqua.blatt1.broker.ClientCollection;
-import aqua.blatt1.common.msgtypes.*;
-import aqua.blatt1.common.Direction;
-import aqua.blatt1.common.FishModel;
-import aqua.blatt3.common.msgtypes.NeighborUpdate;
-import aqua.blatt3.common.msgtypes.TokenMessage;
+import aqua.blatt1.common.msgtypes.DeregisterRequest;
+import aqua.blatt1.common.msgtypes.RegisterRequest;
+import aqua.blatt1.common.msgtypes.RegisterResponse;
+import aqua.blatt5.common.msgtypes.NeighborUpdate;
+import aqua.blatt5.common.msgtypes.TokenMessage;
 import messaging.Endpoint;
 import messaging.Message;
-import aqua.blatt2.broker.PoisonPill;
-import aqua.blatt1.common.Direction;
 
 import javax.swing.*;
 import java.net.InetSocketAddress;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Broker {
     private static final int PORT = 4711;
@@ -88,27 +88,33 @@ public class Broker {
                     InetSocketAddress right = clients.getRightNeighorOf(newIndex);
 
                     // Dem neuen Client seine Nachbarn schicken
-                    endpoint.send(message.getSender(), new NeighborUpdate(left, Direction.LEFT));
-                    endpoint.send(message.getSender(), new NeighborUpdate(right, Direction.RIGHT));
+                    endpoint.send(message.getSender(), new NeighborUpdate(left, right));
 
                     // Den Nachbarn ihre neuen Nachbarn schicken
-                    endpoint.send(left, new NeighborUpdate(message.getSender(), Direction.RIGHT));
-                    endpoint.send(right, new NeighborUpdate(message.getSender(), Direction.LEFT));
+                    int leftIndex = clients.indexOf(left);
+                    int rightIndex = clients.indexOf(right);
 
+                    endpoint.send(left, new NeighborUpdate(
+                            clients.getLeftNeighorOf(leftIndex), message.getSender()));
+
+                    endpoint.send(right, new NeighborUpdate(
+                            message.getSender(), clients.getRightNeighorOf(rightIndex)));
+
+                    // Token nur beim allerersten vergeben
                     if (clients.size() == 1) {
                         endpoint.send(message.getSender(), new TokenMessage());
                     }
-
                 } finally {
                     lock.writeLock().unlock();
                 }
+
             }
 
+// In DeregisterRequest Verarbeitung:
             else if (payload instanceof DeregisterRequest) {
                 lock.writeLock().lock();
                 try {
-                    String id = ((DeregisterRequest) payload).getId();
-                    int index = clients.indexOf(id);
+                    int index = clients.indexOf(message.getSender());
 
                     InetSocketAddress left = clients.getLeftNeighorOf(index);
                     InetSocketAddress right = clients.getRightNeighorOf(index);
@@ -116,13 +122,18 @@ public class Broker {
                     clients.remove(index);
 
                     // Nachbarn neu verbinden
-                    endpoint.send(left, new NeighborUpdate(right, Direction.RIGHT));
-                    endpoint.send(right, new NeighborUpdate(left, Direction.LEFT));
+                    int leftIndex = clients.indexOf(left);
+                    int rightIndex = clients.indexOf(right);
 
+                    endpoint.send(left, new NeighborUpdate(
+                            clients.getLeftNeighorOf(leftIndex), right));
+
+                    endpoint.send(right, new NeighborUpdate(
+                            left, clients.getRightNeighorOf(rightIndex)));
                 } finally {
                     lock.writeLock().unlock();
                 }
             }
-        }
+            }
     }
 }

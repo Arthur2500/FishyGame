@@ -1,19 +1,14 @@
-package aqua.blatt4.client;
+package aqua.blatt5.client;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import aqua.blatt1.client.FishView;
+import aqua.blatt1.common.FishModel;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Observable;
 import java.util.Observer;
-
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import aqua.blatt1.client.FishView;
-import aqua.blatt1.common.FishModel;
 
 /**
  * Visualization of tank; unchanged for snapshot integration.

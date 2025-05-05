@@ -1,7 +1,7 @@
-package aqua.blatt4.client;
+package aqua.blatt5.client;
 
-import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * Controller to trigger a distributed snapshot when the menu item is selected.

@@ -1,19 +1,17 @@
 // TankModel.java – endgültige Snapshot‑Implementierung
 
-package aqua.blatt4.client;
-
-import java.net.InetSocketAddress;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-import javax.swing.JOptionPane;
+package aqua.blatt5.client;
 
 import aqua.blatt1.common.Direction;
 import aqua.blatt1.common.FishModel;
-import aqua.blatt4.common.msgtypes.SnapshotMarker;
-import aqua.blatt4.common.msgtypes.SnapshotTokenMessage;
-import aqua.blatt4.common.msgtypes.TokenMessage;
+import aqua.blatt5.common.msgtypes.SnapshotTokenMessage;
+
+import javax.swing.*;
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.Timer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class TankModel extends Observable implements Iterable<FishModel> {
 
@@ -55,6 +53,9 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
     private SnapshotTokenMessage storedToken = null; // Token geparkt, bis Snapshot fertig
 
+    private enum Location { HERE, LEFT, RIGHT }
+    private final Map<String, Location> fishLocations = new ConcurrentHashMap<>();
+
     /* ---------- Konstruktor ---------- */
     public TankModel(ClientCommunicator communicator) {
         this.fishies = Collections.newSetFromMap(new ConcurrentHashMap<FishModel, Boolean>());
@@ -74,9 +75,11 @@ public class TankModel extends Observable implements Iterable<FishModel> {
         if (fishies.size() < MAX_FISHIES) {
             x = Math.min(x, WIDTH - FishModel.getXSize() - 1);
             y = Math.min(y, HEIGHT - FishModel.getYSize());
-            fishies.add(new FishModel("fish" + (++fishCounter) + "@" + id,
+            FishModel fish = new FishModel("fish" + (++fishCounter) + "@" + id,
                     x, y,
-                    RAND.nextBoolean() ? Direction.LEFT : Direction.RIGHT));
+                    RAND.nextBoolean() ? Direction.LEFT : Direction.RIGHT);
+            fishies.add(fish);
+            fishLocations.put(fish.getId(), Location.HERE);
         }
     }
 
@@ -177,6 +180,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
         fish.setToStart();
         fishies.add(fish);
+        fishLocations.put(fish.getId(), Location.HERE);
     }
 
     /* -------------------------------------------------------------------- */
@@ -320,6 +324,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
             fish.update();
             if (fish.hitsEdge()) {
                 if (hasToken) {
+                    fishLocations.put(fish.getId(), fish.getDirection() == Direction.LEFT ? Location.LEFT : Location.RIGHT);
                     forwarder.handOff(fish);
                     it.remove();
                 } else {
@@ -327,6 +332,40 @@ public class TankModel extends Observable implements Iterable<FishModel> {
                 }
             }
             if (fish.disappears()) it.remove();
+        }
+    }
+
+    public synchronized void locateFishGlobally(String fishId) {
+        Location location = fishLocations.get(fishId);
+        if (location == null) {
+            System.out.println("[Locate] Fisch " + fishId + " unbekannt.");
+            return;
+        }
+
+        switch (location) {
+            case HERE:
+                locateFishLocally(fishId);
+                break;
+            case LEFT:
+                if (leftNeighbor != null) {
+                    forwarder.sendLocationRequest(leftNeighbor, fishId);
+                }
+                break;
+            case RIGHT:
+                if (rightNeighbor != null) {
+                    forwarder.sendLocationRequest(rightNeighbor, fishId);
+                }
+                break;
+        }
+    }
+
+    private void locateFishLocally(String fishId) {
+        for (FishModel fish : fishies) {
+            if (fish.getId().equals(fishId)) {
+                fish.toggle();
+                setChanged(); notifyObservers();
+                break;
+            }
         }
     }
 

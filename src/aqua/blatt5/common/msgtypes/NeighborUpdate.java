@@ -1,4 +1,4 @@
-package aqua.blatt4.common.msgtypes;
+package aqua.blatt5.common.msgtypes;
 
 import java.io.Serializable;
 import java.net.InetSocketAddress;

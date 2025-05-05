@@ -75,8 +75,8 @@ public class TankModel extends Observable implements Iterable<FishModel> {
     }
 
     private synchronized void sendToken() {
-        if (rightNeighbor != null) {
-            endpoint.send(rightNeighbor, new TokenMessage());
+        if (leftNeighbor != null) {
+            endpoint.send(leftNeighbor, new TokenMessage());
         }
     }
 

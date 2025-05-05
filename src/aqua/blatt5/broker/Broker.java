@@ -4,6 +4,8 @@ import aqua.blatt1.broker.ClientCollection;
 import aqua.blatt1.common.msgtypes.DeregisterRequest;
 import aqua.blatt1.common.msgtypes.RegisterRequest;
 import aqua.blatt1.common.msgtypes.RegisterResponse;
+import aqua.blatt5.common.msgtypes.NameResolutionRequest;
+import aqua.blatt5.common.msgtypes.NameResolutionResponse;
 import aqua.blatt5.common.msgtypes.NeighborUpdate;
 import aqua.blatt5.common.msgtypes.TokenMessage;
 import messaging.Endpoint;
@@ -134,6 +136,11 @@ public class Broker {
                     lock.writeLock().unlock();
                 }
             }
+            else if (payload instanceof NameResolutionRequest) {
+                NameResolutionRequest req = (NameResolutionRequest) payload;
+                InetSocketAddress address = clients.get(req.getTankId());
+                endpoint.send(message.getSender(), new NameResolutionResponse(req.getRequestId(), address));
             }
+        }
     }
 }

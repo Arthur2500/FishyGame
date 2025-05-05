@@ -21,6 +21,24 @@ public class TankModel extends Observable implements Iterable<FishModel> {
     private static final int MAX_FISHIES = 5;
     private static final Random RAND = new Random();
 
+    public synchronized void handleNameResolutionResponse(String fishId, InetSocketAddress home) {
+        forwarder.sendLocationUpdate(home, fishId);
+    }
+
+    public synchronized void receiveLocationUpdate(String fishId, InetSocketAddress location) {
+        homeAgent.put(fishId, location);
+    }
+
+    private InetSocketAddress myAddress;
+
+    public void setMyAddress(InetSocketAddress address) {
+        this.myAddress = address;
+    }
+
+    public InetSocketAddress getMyAddress() {
+        return myAddress;
+    }
+
     /* ---------- Enum für Aufzeichnungsmodus ---------- */
     private enum RecordState { IDLE, LEFT, RIGHT, BOTH }
 
@@ -55,6 +73,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
     private enum Location { HERE, LEFT, RIGHT }
     private final Map<String, Location> fishLocations = new ConcurrentHashMap<>();
+    private final Map<String, InetSocketAddress> homeAgent = new ConcurrentHashMap<>();
 
     /* ---------- Konstruktor ---------- */
     public TankModel(ClientCommunicator communicator) {
@@ -68,6 +87,9 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
     public void onRegistration(String id) {
         this.id = id;
+        if (myAddress == null) {
+            System.err.println("Warnung: myAddress ist noch null!");
+        }
         newFish(WIDTH - FishModel.getXSize(), RAND.nextInt(HEIGHT - FishModel.getYSize()));
     }
 
@@ -79,6 +101,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
                     x, y,
                     RAND.nextBoolean() ? Direction.LEFT : Direction.RIGHT);
             fishies.add(fish);
+            homeAgent.put(fish.getId(), null); // null = im Heimataquarium
             fishLocations.put(fish.getId(), Location.HERE);
         }
     }
@@ -180,6 +203,12 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
         fish.setToStart();
         fishies.add(fish);
+        String tankId = fish.getTankId();
+        if (!tankId.equals(id)) {
+            forwarder.sendNameResolutionRequest(tankId, fish.getId());
+        } else {
+            homeAgent.put(fish.getId(), null); // bei Rückkehr
+        }
         fishLocations.put(fish.getId(), Location.HERE);
     }
 

@@ -11,6 +11,9 @@ import aqua.blatt4.common.msgtypes.SnapshotMarker;
 import aqua.blatt5.common.msgtypes.NeighborUpdate;
 import aqua.blatt5.common.msgtypes.SnapshotTokenMessage;
 import aqua.blatt5.common.msgtypes.TokenMessage;
+import aqua.blatt5.common.msgtypes.LocationUpdate;
+import aqua.blatt5.common.msgtypes.NameResolutionRequest;
+import aqua.blatt5.common.msgtypes.NameResolutionResponse;
 import messaging.Endpoint;
 import messaging.Message;
 import aqua.blatt5.common.msgtypes.LocationRequest;
@@ -87,6 +90,14 @@ public class ClientCommunicator {
                 endpoint.send(tankModel.getLeftNeighbor(), new TokenMessage());
             }
         }
+
+        public void sendNameResolutionRequest(String tankId, String fishId) {
+            endpoint.send(broker, new NameResolutionRequest(tankId, fishId));
+        }
+
+        public void sendLocationUpdate(InetSocketAddress home, String fishId) {
+            endpoint.send(home, new LocationUpdate(fishId, tankModel.getMyAddress()));
+        }
     }
 
     public class ClientReceiver extends Thread {
@@ -102,7 +113,12 @@ public class ClientCommunicator {
                 Message msg = endpoint.blockingReceive();
 
                 if (msg.getPayload() instanceof RegisterResponse) {
-                    tankModel.onRegistration(((RegisterResponse) msg.getPayload()).getId());
+                    RegisterResponse response = (RegisterResponse) msg.getPayload();
+                    tankModel.onRegistration(response.getId());
+
+                    // Wir merken uns die eigene Adresse aus dem Kontext
+                    tankModel.setMyAddress(msg.getSender()); // ← Empfängeradresse NICHT vorhanden,
+                    // aber der Broker hat sie aus unserer Nachricht
                 }
                 else if (msg.getPayload() instanceof HandoffRequest) {
                     HandoffRequest ho = (HandoffRequest) msg.getPayload();
@@ -125,6 +141,14 @@ public class ClientCommunicator {
                 else if (msg.getPayload() instanceof LocationRequest) {
                     String fishId = ((LocationRequest) msg.getPayload()).getFishId();
                     tankModel.locateFishGlobally(fishId);
+                }
+                else if (msg.getPayload() instanceof NameResolutionResponse) {
+                    NameResolutionResponse resp = (NameResolutionResponse) msg.getPayload();
+                    tankModel.handleNameResolutionResponse(resp.getRequestId(), resp.getAddress());
+                }
+                else if (msg.getPayload() instanceof LocationUpdate) {
+                    LocationUpdate update = (LocationUpdate) msg.getPayload();
+                    tankModel.receiveLocationUpdate(update.getFishId(), update.getLocation());
                 }
             }
             System.out.println("Receiver stopped.");

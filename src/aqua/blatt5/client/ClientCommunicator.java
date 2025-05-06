@@ -114,11 +114,8 @@ public class ClientCommunicator {
 
                 if (msg.getPayload() instanceof RegisterResponse) {
                     RegisterResponse response = (RegisterResponse) msg.getPayload();
-                    tankModel.onRegistration(response.getId());
-
-                    // Wir merken uns die eigene Adresse aus dem Kontext
                     tankModel.setMyAddress(msg.getSender()); // ← Empfängeradresse NICHT vorhanden,
-                    // aber der Broker hat sie aus unserer Nachricht
+                    tankModel.onRegistration(response.getId());
                 }
                 else if (msg.getPayload() instanceof HandoffRequest) {
                     HandoffRequest ho = (HandoffRequest) msg.getPayload();

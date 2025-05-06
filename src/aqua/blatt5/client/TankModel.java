@@ -72,8 +72,8 @@ public class TankModel extends Observable implements Iterable<FishModel> {
     private SnapshotTokenMessage storedToken = null; // Token geparkt, bis Snapshot fertig
 
     private enum Location { HERE, LEFT, RIGHT }
-    private final Map<String, Location> fishLocations = new ConcurrentHashMap<>();
-    private final Map<String, InetSocketAddress> homeAgent = new ConcurrentHashMap<>();
+    private final Map<String, Location> fishLocations = new HashMap<>();
+    private final Map<String, InetSocketAddress> homeAgent = new HashMap<>();
 
     /* ---------- Konstruktor ---------- */
     public TankModel(ClientCommunicator communicator) {

@@ -2,21 +2,22 @@ package aqua.blatt4.common.msgtypes;
 
 import java.io.Serializable;
 import java.net.InetSocketAddress;
+import aqua.blatt1.common.Direction;
 
 public class NeighborUpdate implements Serializable {
-    private final InetSocketAddress leftNeighbor;
-    private final InetSocketAddress rightNeighbor;
+    private final Direction direction;
+    private final InetSocketAddress neighbor;
 
-    public NeighborUpdate(InetSocketAddress left, InetSocketAddress right) {
-        this.leftNeighbor = left;
-        this.rightNeighbor = right;
+    public NeighborUpdate(Direction direction, InetSocketAddress neighbor) {
+        this.direction = direction;
+        this.neighbor = neighbor;
     }
 
-    public InetSocketAddress getLeftNeighbor() {
-        return leftNeighbor;
+    public Direction getDirection() {
+        return direction;
     }
 
-    public InetSocketAddress getRightNeighbor() {
-        return rightNeighbor;
+    public InetSocketAddress getNeighbor() {
+        return neighbor;
     }
 }

@@ -107,7 +107,10 @@ public class ClientCommunicator {
                 }
                 else if (msg.getPayload() instanceof NeighborUpdate) {
                     NeighborUpdate update = (NeighborUpdate) msg.getPayload();
-                    tankModel.setNeighbors(update.getLeftNeighbor(), update.getRightNeighbor());
+                    if (update.getDirection() == Direction.LEFT)
+                        tankModel.setLeftNeighbor(update.getNeighbor());
+                    else
+                        tankModel.setRightNeighbor(update.getNeighbor());
                 }
                 else if (msg.getPayload() instanceof TokenMessage) {
                     tankModel.receiveToken();

@@ -296,9 +296,12 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
     public boolean hasToken() { return hasToken; }
 
-    public void setNeighbors(InetSocketAddress left, InetSocketAddress right) {
-        this.leftNeighbor  = left;
-        this.rightNeighbor = right;
+    public void setLeftNeighbor(InetSocketAddress neighbor) {
+        this.leftNeighbor = neighbor;
+    }
+
+    public void setRightNeighbor(InetSocketAddress neighbor) {
+        this.rightNeighbor = neighbor;
     }
 
     public InetSocketAddress getLeftNeighbor()  { return leftNeighbor; }

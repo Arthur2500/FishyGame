@@ -87,17 +87,12 @@ public class Broker {
                     InetSocketAddress right = clients.getRightNeighorOf(newIndex);
 
                     // Dem neuen Client seine Nachbarn schicken
-                    endpoint.send(message.getSender(), new NeighborUpdate(left, right));
+                    endpoint.send(message.getSender(), new NeighborUpdate(Direction.LEFT, left));
+                    endpoint.send(message.getSender(), new NeighborUpdate(Direction.RIGHT, right));
 
-                    // Den Nachbarn ihre neuen Nachbarn schicken
-                    int leftIndex = clients.indexOf(left);
-                    int rightIndex = clients.indexOf(right);
-
-                    endpoint.send(left, new NeighborUpdate(
-                            clients.getLeftNeighorOf(leftIndex), message.getSender()));
-
-                    endpoint.send(right, new NeighborUpdate(
-                            message.getSender(), clients.getRightNeighorOf(rightIndex)));
+                    // ebenso bei den Nachbarn:
+                    endpoint.send(left, new NeighborUpdate(Direction.RIGHT, message.getSender()));
+                    endpoint.send(right, new NeighborUpdate(Direction.LEFT, message.getSender()));
 
                     // Token nur beim allerersten vergeben
                     if (clients.size() == 1) {
@@ -124,11 +119,8 @@ public class Broker {
                     int leftIndex = clients.indexOf(left);
                     int rightIndex = clients.indexOf(right);
 
-                    endpoint.send(left, new NeighborUpdate(
-                            clients.getLeftNeighorOf(leftIndex), right));
-
-                    endpoint.send(right, new NeighborUpdate(
-                            left, clients.getRightNeighorOf(rightIndex)));
+                    endpoint.send(left, new NeighborUpdate(Direction.RIGHT, right));
+                    endpoint.send(right, new NeighborUpdate(Direction.LEFT, left));
                 } finally {
                     lock.writeLock().unlock();
                 }

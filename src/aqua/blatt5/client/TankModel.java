@@ -263,25 +263,27 @@ public class TankModel extends Observable implements Iterable<FishModel> {
     /* -------------------------------------------------------------------- */
 
     private synchronized void handleToken(SnapshotTokenMessage token) {
+        SnapshotTokenMessage resultToken = token;
+
         if (!snapshotAdded) {
-            token = new SnapshotTokenMessage(token.getInitiatorId(),
-                    token.getSum() + localSnapshot);
+            int newSum = token.getSum() + localSnapshot;
+            resultToken = new SnapshotTokenMessage(token.getInitiatorId(), newSum);
             snapshotAdded = true;
-            System.out.println("[Snapshot] " + id + " addiert ⇒ Zwischensumme "
-                    + token.getSum());
+            System.out.println("[Snapshot] " + id + " addiert ⇒ Zwischensumme " + newSum);
         }
 
-        if (token.getInitiatorId().equals(id)) {
-            /* volle Runde geschafft – Ergebnis anzeigen */
-            JOptionPane.showMessageDialog(null,
-                    "🐟 Global Snapshot abgeschlossen!\n\nGesamtpopulation: "
-                            + token.getSum(),
-                    "Global Snapshot", JOptionPane.INFORMATION_MESSAGE);
-            resetSnapshotState();
+        if (resultToken.getInitiatorId().equals(id)) {
+            int finalSum = resultToken.getSum();
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(null,
+                        "🐟 Global Snapshot abgeschlossen!\n\nGesamtpopulation: " + finalSum,
+                        "Global Snapshot", JOptionPane.INFORMATION_MESSAGE);
+            });
         } else {
-            forwarder.sendSnapshotToken(token);
-            resetSnapshotState();
+            forwarder.sendSnapshotToken(resultToken);
         }
+
+        resetSnapshotState();
     }
 
     /* -------------------------------------------------------------------- */
@@ -300,6 +302,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
         isSnapshotInitiator = false;
         recordState         = RecordState.IDLE;
         storedToken         = null;
+        localSnapshot       = 0;
         leftBuffer.clear();
         rightBuffer.clear();
         System.out.println("[Snapshot] " + id + " – Zustand zurückgesetzt");
@@ -329,9 +332,12 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
     public boolean hasToken() { return hasToken; }
 
-    public void setNeighbors(InetSocketAddress left, InetSocketAddress right) {
-        this.leftNeighbor  = left;
-        this.rightNeighbor = right;
+    public void setLeftNeighbor(InetSocketAddress neighbor) {
+        this.leftNeighbor = neighbor;
+    }
+
+    public void setRightNeighbor(InetSocketAddress neighbor) {
+        this.rightNeighbor = neighbor;
     }
 
     public InetSocketAddress getLeftNeighbor()  { return leftNeighbor; }

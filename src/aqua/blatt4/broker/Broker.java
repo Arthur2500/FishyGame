@@ -104,7 +104,7 @@ public class Broker {
 
             }
 
-// In DeregisterRequest Verarbeitung:
+            // In DeregisterRequest Verarbeitung:
             else if (payload instanceof DeregisterRequest) {
                 lock.writeLock().lock();
                 try {
@@ -114,10 +114,6 @@ public class Broker {
                     InetSocketAddress right = clients.getRightNeighorOf(index);
 
                     clients.remove(index);
-
-                    // Nachbarn neu verbinden
-                    int leftIndex = clients.indexOf(left);
-                    int rightIndex = clients.indexOf(right);
 
                     endpoint.send(left, new NeighborUpdate(Direction.RIGHT, right));
                     endpoint.send(right, new NeighborUpdate(Direction.LEFT, left));

@@ -7,8 +7,8 @@ import aqua.blatt1.common.msgtypes.DeregisterRequest;
 import aqua.blatt1.common.msgtypes.HandoffRequest;
 import aqua.blatt1.common.msgtypes.RegisterRequest;
 import aqua.blatt1.common.msgtypes.RegisterResponse;
+import aqua.blatt4.common.msgtypes.NeighborUpdate;
 import aqua.blatt4.common.msgtypes.SnapshotMarker;
-import aqua.blatt5.common.msgtypes.NeighborUpdate;
 import aqua.blatt5.common.msgtypes.SnapshotTokenMessage;
 import aqua.blatt5.common.msgtypes.TokenMessage;
 import aqua.blatt5.common.msgtypes.LocationUpdate;
@@ -122,9 +122,12 @@ public class ClientCommunicator {
                     // Pass sender so we can record channel state
                     tankModel.receiveFish(msg.getSender(), ho.getFish());
                 }
-                else if (msg.getPayload() instanceof NeighborUpdate) {
-                    NeighborUpdate update = (NeighborUpdate) msg.getPayload();
-                    tankModel.setNeighbors(update.getLeftNeighbor(), update.getRightNeighbor());
+                else if (msg.getPayload() instanceof aqua.blatt4.common.msgtypes.NeighborUpdate) {
+                    aqua.blatt4.common.msgtypes.NeighborUpdate update = (NeighborUpdate) msg.getPayload();
+                    if (update.getDirection() == Direction.LEFT)
+                        tankModel.setLeftNeighbor(update.getNeighbor());
+                    else
+                        tankModel.setRightNeighbor(update.getNeighbor());
                 }
                 else if (msg.getPayload() instanceof TokenMessage) {
                     tankModel.receiveToken();

@@ -143,6 +143,12 @@ public class TankModel extends Observable implements Iterable<FishModel> {
         /* Marker in beide Ausgänge schicken */
         forwarder.sendSnapshotMarker();
 
+        if (leftNeighbor != null && leftNeighbor.equals(rightNeighbor)) {
+            System.out.println("[Snapshot] " + id + " – Nur ein Nachbar → Marker doppelt lokal verarbeiten");
+            onSnapshotMarker(leftNeighbor);
+            onSnapshotMarker(rightNeighbor);
+        }
+
         System.out.println("[Snapshot] *** Initiator " + id + " hat gestartet – lokale Fische: "
                 + localSnapshot + " ***");
     }
@@ -153,6 +159,13 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 
     public synchronized void onSnapshotMarker(InetSocketAddress sender) {
         boolean fromLeft = sender.equals(leftNeighbor);
+
+        if (leftNeighbor != null && leftNeighbor.equals(rightNeighbor)) {
+            if (!snapshotFinished) {
+                finishLocalSnapshot();
+            }
+            return;
+        }
 
         /* Erster Marker überhaupt? */
         if (!snapshotActive) {

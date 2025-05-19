@@ -132,16 +132,22 @@ public class Broker {
 
                 if (isNewClient) {
                     int newIndex = clients.indexOf(id);
-                    InetSocketAddress left = clients.getLeftNeighorOf(newIndex);
-                    InetSocketAddress right = clients.getRightNeighorOf(newIndex);
+                    InetSocketAddress left, right;
 
-                    // Nachbarn benachrichtigen
+                    if (clients.size() == 1) {
+                        // Nur ein Client im Ring → er selbst ist linker und rechter Nachbar
+                        left = right = sender;
+                    } else {
+                        left = clients.getLeftNeighorOf(newIndex);
+                        right = clients.getRightNeighorOf(newIndex);
+                    }
+
+                    // Nachbarn setzen
                     endpoint.send(sender, new NeighborUpdate(Direction.LEFT, left));
                     endpoint.send(sender, new NeighborUpdate(Direction.RIGHT, right));
                     endpoint.send(left, new NeighborUpdate(Direction.RIGHT, sender));
                     endpoint.send(right, new NeighborUpdate(Direction.LEFT, sender));
 
-                    // Token nur an allerersten Client
                     if (clients.size() == 1) {
                         endpoint.send(sender, new TokenMessage());
                     }

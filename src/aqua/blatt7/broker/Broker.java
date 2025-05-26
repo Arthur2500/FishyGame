@@ -8,6 +8,7 @@ import aqua.blatt5.common.msgtypes.NameResolutionRequest;
 import aqua.blatt5.common.msgtypes.NameResolutionResponse;
 import aqua.blatt5.common.msgtypes.TokenMessage;
 import aqua.blatt7.common.msgtypes.RegisterResponse;
+import aqua.blatt7.crypto.SecureEndpoint;
 import messaging.Endpoint;
 import messaging.Message;
 
@@ -22,7 +23,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Broker {
     private static final int PORT = 4711;
-    private final Endpoint endpoint;
+    private final SecureEndpoint endpoint;
     private final ClientCollection<InetSocketAddress> clients;
     private final AtomicInteger clientCounter;
     private final ExecutorService executor;
@@ -31,7 +32,7 @@ public class Broker {
     private static final int LEASE_DURATION_MS = 10000; // z.B. 10 Sekunden
 
     public Broker() {
-        this.endpoint = new Endpoint(PORT);
+        this.endpoint = new SecureEndpoint(PORT);
         this.clients = new ClientCollection<>();
         this.clientCounter = new AtomicInteger(1);
         this.executor = Executors.newFixedThreadPool(10);

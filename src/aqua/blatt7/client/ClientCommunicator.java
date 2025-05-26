@@ -10,6 +10,7 @@ import aqua.blatt4.common.msgtypes.NeighborUpdate;
 import aqua.blatt4.common.msgtypes.SnapshotMarker;
 import aqua.blatt5.common.msgtypes.*;
 import aqua.blatt7.common.msgtypes.RegisterResponse;
+import aqua.blatt7.crypto.SecureEndpoint;
 import messaging.Endpoint;
 import messaging.Message;
 
@@ -19,10 +20,10 @@ import java.net.InetSocketAddress;
  * Handles sending and receiving messages between client and broker or peers.
  */
 public class ClientCommunicator {
-    private final Endpoint endpoint;
+    private final SecureEndpoint endpoint;
 
     public ClientCommunicator() {
-        endpoint = new Endpoint();
+        endpoint = new SecureEndpoint();
     }
 
     public class ClientForwarder {

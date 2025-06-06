@@ -1,6 +1,11 @@
 package aqua.blatt7.crypto;
 
-import aqua.blatt7.common.msgtypes.KeyExchangeMessage;
+import aqua.blatt1.common.msgtypes.DeregisterRequest;
+import aqua.blatt1.common.msgtypes.HandoffRequest;
+import aqua.blatt1.common.msgtypes.RegisterRequest;
+import aqua.blatt4.common.msgtypes.SnapshotMarker;
+import aqua.blatt7.common.msgtypes.*;
+import aqua.blatt4.common.msgtypes.NeighborUpdate;
 import messaging.Endpoint;
 import messaging.Message;
 
@@ -78,7 +83,20 @@ public class SecureEndpoint {
         Objects.requireNonNull(payload,   "payload");
 
         /* Key-exchange messages are control traffic – never encrypt them. */
-        if (payload instanceof KeyExchangeMessage) {
+        // Whitelist an Nachrichtentypen, die UNVERSCHLÜSSELT gesendet werden
+        if (payload instanceof KeyExchangeMessage
+                || payload instanceof RegisterRequest
+                || payload instanceof RegisterResponse
+                || payload instanceof DeregisterRequest
+                || payload instanceof SnapshotMarker
+                || payload instanceof SnapshotTokenMessage
+                || payload instanceof TokenMessage
+                || payload instanceof aqua.blatt4.common.msgtypes.NeighborUpdate
+                || payload instanceof NameResolutionRequest
+                || payload instanceof aqua.blatt5.common.msgtypes.NameResolutionResponse
+                || payload instanceof aqua.blatt5.common.msgtypes.LocationUpdate
+                || payload instanceof aqua.blatt5.common.msgtypes.LocationRequest
+                || payload instanceof HandoffRequest) {
             internal.send(receiver, payload);
             return;
         }
@@ -99,6 +117,7 @@ public class SecureEndpoint {
             byte[] encrypted  = cipher.doFinal(data);
             internal.send(receiver, encrypted);
         } catch (Exception e) {
+            System.err.println("[DEBUG] ERROR while encrypting payload of type: " + payload.getClass());
             throw new RuntimeException("Sending encrypted message failed", e);
         }
     }
